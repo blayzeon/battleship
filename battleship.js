@@ -85,6 +85,16 @@ const gameboard = function createPlayerGameboard () {
 
             // check if ship is dead
             ships[index[0]].isSunk();
+        },
+        checkShips: function(){
+            const ships = this.board.placed;
+            for (let i = 0; i < ships.length; i += 1){
+                if (ships[i].sunk !== true){
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

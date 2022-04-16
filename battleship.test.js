@@ -68,3 +68,12 @@ test('gameboard is able to sink completely damaged ships', () => {
     expect(board.board.placed[0].sunk).toStrictEqual(true);
 });
 
+test('gameboard is able to report if all ships are sunk', () => {
+    const board = gameboard();
+    board.placeship([1, 1], 2);
+    board.board.placed[0].sunk = true;
+    const status = board.checkShips();
+
+    expect(status).toStrictEqual(true);
+});
+
