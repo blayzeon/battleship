@@ -2,9 +2,16 @@ import { ship, gameboard } from './battleship.js';
 const { test, expect } = require('@jest/globals');
 
 test('properly applies a length to a new ship', () => {
-    const newShip = ship([1, 1,], 2);
+    const newShip = ship([1, 1], 2);
 
     expect(newShip.length).toBe(2);
+});
+
+test('new ships can be rotated', () => {
+    const newShip = ship([1, 1], 3);
+    newShip.rotate()
+
+    expect(newShip.damage[2].coords).toStrictEqual([3, 1]);
 });
 
 test('new ships aren\'t sunk', () => {
@@ -28,6 +35,14 @@ test('gameboard is able to add new ships', () => {
     expect(board.placed).not.toStrictEqual([]);
 });
 
+test('gameboard is able to keep track of misses', () => {
+    const board = gameboard();
+    board.placeship([1, 1], 1);
+    board.recieveAttack([5, 5]);
+
+    expect(board.board.misses[0]).toStrictEqual([5, 5]);
+});
+
 test('gameboard is able to damage ships', () => {
     const board = gameboard();
     board.placeship([1, 1], 1);
@@ -43,3 +58,13 @@ test('gameboard is able to precisely damage ships', () => {
 
     expect(board.board.placed[0].damage[1].damaged).toStrictEqual(true);
 });
+
+test('gameboard is able to sink completely damaged ships', () => {
+    const board = gameboard();
+    board.placeship([1, 1], 2);
+    board.recieveAttack([1, 1]);
+    board.recieveAttack([1, 2]);
+
+    expect(board.board.placed[0].sunk).toStrictEqual(true);
+});
+

@@ -30,12 +30,21 @@ const ship = function createBattleship (coords=[1, 1], length=1, position='h', s
         },
         isSunk: function () {
             for (let i = 1; i < this.damage.length; i += 1 ){
-                if ( this.damage[i] === false ) {
+                if ( this.damage[i].damaged === false ) {
                     return
                 }
             }
 
             this.sunk = true;
+        },
+        rotate: function() {
+            let newPosition = 'h';
+            if (this.position === 'h'){
+                newPosition = 'v';
+            }
+
+            this.damage = setOrientation(this.damage[0].coords, this.length, newPosition);
+            this.position = newPosition;
         }
     }
 }
@@ -52,6 +61,7 @@ const gameboard = function createPlayerGameboard () {
             
         },
         recieveAttack: function (coords) {
+            // attack ship based on coords provided
             const ships = this.board.placed;
             function checkIndexes(){
                 
@@ -65,19 +75,16 @@ const gameboard = function createPlayerGameboard () {
                 return result;
             };
 
-            const indexes = checkIndexes();
-            if (0 === false){
+            const index = checkIndexes();
+            if (index === false){
                 this.board.misses.push(coords);
+                return;
             } else {
-                this.board.placed[indexes[0]].hit(indexes[1]);
+                ships[index[0]].hit(index[1]);
             }
+
+            // check if ship is dead
+            ships[index[0]].isSunk();
         }
     }
 }
-
-const gb = gameboard();
-gb.placeship([1, 1], 2);
-gb.recieveAttack([1, 2]);
-console.log(gb.board.placed[0].damage[1].damaged)
-
-// ships.forEach(x => x.damage.forEach(y => console.log(ships.indexOf(x) + ' ' + x.damage.indexOf(y))));
