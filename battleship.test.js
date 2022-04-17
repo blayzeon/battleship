@@ -85,3 +85,22 @@ test('player is able to attack', () => {
 
     expect(board.board.placed[0].damage[0].damaged).toStrictEqual(true);
 });
+
+test('player is not able to attack the same place twice', () => {
+    const player1 = player();
+    const board = gameboard();
+    board.placeship([1, 1], 1);
+    player1.attack(board, [1, 1]);
+    const secondAttack = player1.attack(board, [1, 1]);
+
+    expect(secondAttack).toStrictEqual(false);
+});
+
+test('computer is able to attack randomly', () => {
+    const computer = player();
+    const board = gameboard();
+    board.placeship([1, 1], 1);
+    computer.randomAttack(board);
+
+    expect(board.board.misses).not.toStrictEqual([]);
+});

@@ -1,5 +1,7 @@
 export { ship, gameboard, player };
 
+const boardSize = 10;
+
 const setOrientation = function generateCoordsAndDamageObj(start, length, position){
     let newCoords = [];
 
@@ -102,7 +104,7 @@ const gameboard = function createPlayerGameboard () {
 
 const player = function createPlayer () {
     return {
-        attack: function(opponent, coords){
+        attack: function(opponent, coords) {
             // can't check if we have an invalid board
             if (!opponent) { return false };
             
@@ -111,8 +113,18 @@ const player = function createPlayer () {
             for (let i = 0; i < misses.length; i += 1){
                 if (misses[i].toString() !== coords.toString()){
                     opponent.receiveAttack(coords);
-                    return
+                    return true;
                 }
+            }
+
+            return false;
+        }, 
+        randomAttack: function(opponent) {
+            const coords = [Math.floor(Math.random() * boardSize), Math.floor(Math.random() * boardSize)];
+            const attempt = this.attack(opponent, coords);
+
+            if (attempt === false){
+                this.randomAttack(opponent);
             }
         }
     }
