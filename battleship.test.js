@@ -1,4 +1,4 @@
-import { ship, gameboard } from './battleship.js';
+import { ship, gameboard, player } from './battleship.js';
 const { test, expect } = require('@jest/globals');
 
 test('properly applies a length to a new ship', () => {
@@ -38,7 +38,7 @@ test('gameboard is able to add new ships', () => {
 test('gameboard is able to keep track of misses', () => {
     const board = gameboard();
     board.placeship([1, 1], 1);
-    board.recieveAttack([5, 5]);
+    board.receiveAttack([5, 5]);
 
     expect(board.board.misses[0]).toStrictEqual([5, 5]);
 });
@@ -46,7 +46,7 @@ test('gameboard is able to keep track of misses', () => {
 test('gameboard is able to damage ships', () => {
     const board = gameboard();
     board.placeship([1, 1], 1);
-    board.recieveAttack([1, 1]);
+    board.receiveAttack([1, 1]);
 
     expect(board.board.placed[0].damage[0].damaged).toStrictEqual(true);
 });
@@ -54,7 +54,7 @@ test('gameboard is able to damage ships', () => {
 test('gameboard is able to precisely damage ships', () => {
     const board = gameboard();
     board.placeship([1, 1], 2);
-    board.recieveAttack([1, 2]);
+    board.receiveAttack([1, 2]);
 
     expect(board.board.placed[0].damage[1].damaged).toStrictEqual(true);
 });
@@ -62,8 +62,8 @@ test('gameboard is able to precisely damage ships', () => {
 test('gameboard is able to sink completely damaged ships', () => {
     const board = gameboard();
     board.placeship([1, 1], 2);
-    board.recieveAttack([1, 1]);
-    board.recieveAttack([1, 2]);
+    board.receiveAttack([1, 1]);
+    board.receiveAttack([1, 2]);
 
     expect(board.board.placed[0].sunk).toStrictEqual(true);
 });
@@ -72,8 +72,16 @@ test('gameboard is able to report if all ships are sunk', () => {
     const board = gameboard();
     board.placeship([1, 1], 2);
     board.board.placed[0].sunk = true;
-    const status = board.checkShips();
+    const status = board.areAllShipsSunk();
 
     expect(status).toStrictEqual(true);
 });
 
+test('player is able to attack', () => {
+    const player1 = player();
+    const board = gameboard();
+    board.placeship([1, 1], 1);
+    player1.attack(board, [1, 1]);
+
+    expect(board.board.placed[0].damage[0].damaged).toStrictEqual(true);
+});

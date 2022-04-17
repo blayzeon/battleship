@@ -1,4 +1,4 @@
-export { ship, gameboard };
+export { ship, gameboard, player };
 
 const setOrientation = function generateCoordsAndDamageObj(start, length, position){
     let newCoords = [];
@@ -60,7 +60,7 @@ const gameboard = function createPlayerGameboard () {
             this.board.placed.push(newShip);
             
         },
-        recieveAttack: function (coords) {
+        receiveAttack: function (coords) {
             // attack ship based on coords provided
             const ships = this.board.placed;
             function checkIndexes(){
@@ -76,17 +76,18 @@ const gameboard = function createPlayerGameboard () {
             };
 
             const index = checkIndexes();
-            if (index === false){
-                this.board.misses.push(coords);
-                return;
-            } else {
-                ships[index[0]].hit(index[1]);
-            }
 
-            // check if ship is dead
-            ships[index[0]].isSunk();
+            // recording hits under misses as well for easier tracking
+            this.board.misses.push(coords);
+
+            if (index){
+                ships[index[0]].hit(index[1]);
+                // check if ship is dead
+                ships[index[0]].isSunk();
+                return;
+            }             
         },
-        checkShips: function(){
+        areAllShipsSunk: function(){
             const ships = this.board.placed;
             for (let i = 0; i < ships.length; i += 1){
                 if (ships[i].sunk !== true){
@@ -95,6 +96,24 @@ const gameboard = function createPlayerGameboard () {
             }
 
             return true;
+        }
+    }
+}
+
+const player = function createPlayer () {
+    return {
+        attack: function(opponent, coords){
+            // can't check if we have an invalid board
+            if (!opponent) { return false };
+            
+            // prevents an error if there are no other attacks attempts
+            const misses = opponent.board.misses[0] ? opponent.board.misses : [[]];
+            for (let i = 0; i < misses.length; i += 1){
+                if (misses[i].toString() !== coords.toString()){
+                    opponent.receiveAttack(coords);
+                    return
+                }
+            }
         }
     }
 }
