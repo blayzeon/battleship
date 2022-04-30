@@ -40,19 +40,27 @@ const buildGrid = function(tiles) {
     return table;
 }
 
-const placeShip = function (board, coords) {
-    const unit = board.querySelector(`[data="${coords}"]`);
-    unit.classList.add('ship');
+const returnSquare = function (board, coords) {
+    const square = board.querySelector(`[data="${coords}"]`);
+    if (square) { return square }
 
+    return false;
+}
+
+const placePeg = function() {
     const peg = document.createElement('div');
     peg.classList.add('peg');
-    unit.appendChild(peg);
+    return peg;
+}
+
+const placeShip = function (board, coords) {
+    const unit = returnSquare(board, coords);
+    unit.classList.add('ship');
 };
 
 const placeShips = function (boardObj, boardUi) {
     for (let i = 0; i < boardObj.length; i += 1 ) {
-        console.log(boardObj[i].coords.toString());
-        placeShip(boardUi, boardObj[i].coords.toString())
+        placeShip(boardUi, boardObj[i].coords.toString());
     }
 }
 
@@ -67,25 +75,45 @@ playerUi.appendChild(buildGrid(boardSize));
 const userPlayer = player();
 const playerBoard = gameboard();
 playerBoard.randomize(5);
-console.log(playerBoard.board.placed);
 
 const cpuPlayer = player();
 const cpuBoard = gameboard();
 cpuBoard.randomize(5);
 
-// create the boards
-console.log(playerBoard);
+// create the game state
 placeShips(playerBoard.board.placed, playerUi);
 
-// listens to where the user clicks
 document.addEventListener('click', (e)=>{
+    function renderDamage(ui, obj, result) {
+        const missed = obj.misses[obj.misses.length-1];
+        
+        const coords = missed.toString();
+        const square = returnSquare(ui, coords);
+        
+        const peg = placePeg();
+        square.appendChild(peg);
+
+        if (result) {
+            peg.classList.add('damaged');
+        }
+    }
+
     // checks which board
     const board = e.target.closest('table');
 
     // checks which grid square
     const td = e.target.closest('td');
     
-    if (!td) { return }
+    if (!td) { return } // end if user didn't click a square
+    if (td.innerHTML != '') { return } // end if user clicked a title that has already been clicked
 
-    // placeUnit(board, td.getAttribute('data'));
-})
+    if (computerUi.querySelector('table') === board) {
+        const result1 = userPlayer.attack(cpuBoard, td.getAttribute('data'));
+        renderDamage(computerUi, cpuBoard.board, result1);
+
+
+        const result2 = cpuPlayer.randomAttack(playerBoard);
+        renderDamage(playerUi, playerBoard.board, result2);
+    }
+
+});

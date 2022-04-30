@@ -2,6 +2,14 @@ export { ship, gameboard, player };
 
 const boardSize = 10;
 
+function getRandomCoords(max) {
+    function random(max) {
+        const min = 1;
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+    return [random(max), random(max)];
+}
+
 const setOrientation = function generateCoordsAndDamageObj(start, length, position){
     let newCoords = [];
 
@@ -65,19 +73,12 @@ const gameboard = function createPlayerGameboard () {
         },
         randomize: function (units) {
             const coords = [];
-            function getRandomCoords(max) {
-                function random(max) {
-                    const min = 1;
-                    return Math.floor(Math.random() * (max - min + 1) + min);
-                }
-                return [random(max), random(max)];
-            }
 
             while (coords.length < units) {
-                let newCoord = getRandomCoords(10);
+                let newCoord = getRandomCoords(boardSize);
 
                 while (coords.includes(newCoord)) {
-                    newCoord = getRandomCoords(10);
+                    newCoord = getRandomCoords(boardSize);
                 }
 
                 coords.push(newCoord);
@@ -111,7 +112,7 @@ const gameboard = function createPlayerGameboard () {
                 ships[index[0]].hit(index[1]);
                 // check if ship is dead
                 ships[index[0]].isSunk();
-                return;
+                return ships[index[0]].coords;
             }             
         },
         areAllShipsSunk: function(){
@@ -135,22 +136,25 @@ const player = function createPlayer () {
             
             // prevents an error if there are no other attacks attempts
             const misses = opponent.board.misses[0] ? opponent.board.misses : [[]];
+
             for (let i = 0; i < misses.length; i += 1){
-                if (misses[i].toString() !== coords.toString()){
-                    opponent.receiveAttack(coords);
-                    return true;
+                if (misses[i].toString() === coords.toString()){
+                    return false;  
                 }
             }
 
-            return false;
+            return opponent.receiveAttack(coords);
         }, 
         randomAttack: function(opponent) {
-            const coords = [Math.floor(Math.random() * boardSize), Math.floor(Math.random() * boardSize)];
+            const coords = getRandomCoords(boardSize);
             const attempt = this.attack(opponent, coords);
 
             if (attempt === false){
                 this.randomAttack(opponent);
             }
+
+            return attempt;
+            
         }
     }
 }

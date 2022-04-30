@@ -73,7 +73,6 @@ th {
 }
 
 .grid {
-    padding: 0.1rem;
     border: 1px solid white;
 }
 
@@ -98,7 +97,7 @@ th {
 }
 
 .damaged {
-    background-color: hsla(0, 70%, 30%, 0.7);
+    background-color: red;
 }
 
 .destroyed {
