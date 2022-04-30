@@ -32,7 +32,14 @@ test('gameboard is able to add new ships', () => {
     const board = gameboard();
     board.placeship([1, 1], 1);
 
-    expect(board.placed).not.toStrictEqual([]);
+    expect(board.board.placed).not.toStrictEqual([]);
+});
+
+test('gameboard is able randomize ship placement', () => {
+    const board = gameboard();
+    board.randomize(5);
+
+    expect(board.board.placed.length).toStrictEqual(5);
 });
 
 test('gameboard is able to keep track of misses', () => {

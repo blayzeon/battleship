@@ -27,6 +27,7 @@ const ship = function createBattleship (coords=[1, 1], length=1, position='h', s
         damage: setOrientation(coords, length, position),
         position,
         sunk,
+        coords,
         hit: function (index) {
             this.damage[index].damaged = true;
         },
@@ -61,6 +62,30 @@ const gameboard = function createPlayerGameboard () {
             const newShip = ship(coords, length);
             this.board.placed.push(newShip);
             
+        },
+        randomize: function (units) {
+            const coords = [];
+            function getRandomCoords(max) {
+                function random(max) {
+                    const min = 1;
+                    return Math.floor(Math.random() * (max - min + 1) + min);
+                }
+                return [random(max), random(max)];
+            }
+
+            while (coords.length < units) {
+                let newCoord = getRandomCoords(10);
+
+                while (coords.includes(newCoord)) {
+                    newCoord = getRandomCoords(10);
+                }
+
+                coords.push(newCoord);
+            }
+
+            coords.forEach((coord) => {
+                this.placeship(coord, 1);
+            })
         },
         receiveAttack: function (coords) {
             // attack ship based on coords provided

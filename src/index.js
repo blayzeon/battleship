@@ -24,12 +24,13 @@ const buildGrid = function(tiles) {
         const row = document.createElement('tr');
 
         const header = document.createElement('th');
-        header.innerHTML = (String.fromCharCode(j+ascii));
+        header.innerText = (String.fromCharCode(j+ascii));
         row.appendChild(header);
 
         for (let k = 0; k < boardSize; k += 1 ) {
             const data = document.createElement('td');
-            data.setAttribute('data', 'grid');
+            data.setAttribute('data', `${j+1},${k+1}`);
+            data.classList.add('grid')
             row.appendChild(data);
         }
 
@@ -39,13 +40,52 @@ const buildGrid = function(tiles) {
     return table;
 }
 
-document.querySelector('#top-center').appendChild(buildGrid(10));
-document.querySelector('#bottom-center').appendChild(buildGrid(10));
+const placeShip = function (board, coords) {
+    const unit = board.querySelector(`[data="${coords}"]`);
+    unit.classList.add('ship');
 
-const human = player();
-const humanBoard = gameboard();
+    const peg = document.createElement('div');
+    peg.classList.add('peg');
+    unit.appendChild(peg);
+};
 
-const cpu = player();
+const placeShips = function (boardObj, boardUi) {
+    for (let i = 0; i < boardObj.length; i += 1 ) {
+        console.log(boardObj[i].coords.toString());
+        placeShip(boardUi, boardObj[i].coords.toString())
+    }
+}
+
+const boardSize = 10;
+
+const computerUi = document.querySelector('#top-center');
+const playerUi = document.querySelector('#bottom-center');
+
+computerUi.appendChild(buildGrid(boardSize));
+playerUi.appendChild(buildGrid(boardSize));
+
+const userPlayer = player();
+const playerBoard = gameboard();
+playerBoard.randomize(5);
+console.log(playerBoard.board.placed);
+
+const cpuPlayer = player();
 const cpuBoard = gameboard();
+cpuBoard.randomize(5);
 
-console.log(human, humanBoard, cpu, cpuBoard);
+// create the boards
+console.log(playerBoard);
+placeShips(playerBoard.board.placed, playerUi);
+
+// listens to where the user clicks
+document.addEventListener('click', (e)=>{
+    // checks which board
+    const board = e.target.closest('table');
+
+    // checks which grid square
+    const td = e.target.closest('td');
+    
+    if (!td) { return }
+
+    // placeUnit(board, td.getAttribute('data'));
+})
