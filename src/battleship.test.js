@@ -37,9 +37,28 @@ test('gameboard is able to add new ships', () => {
 
 test('gameboard is able randomize ship placement', () => {
     const board = gameboard();
-    board.randomize(5);
+    board.randomize(5, 5);
 
     expect(board.board.placed.length).toStrictEqual(5);
+});
+
+test('gameboard does not create items that extend past the border', () => {
+    let result = undefined;
+    for (let i = 0; i < 10; i += 1) {
+        const board = gameboard();
+        board.randomize(1, 10);
+        const item = board.board.placed[0];
+        const coords = item.damage[item.damage.length-1].coords[1];
+        if ( coords > 10) {
+            result = coords;
+        }
+    }
+
+    if (result === undefined) {
+        result = true;
+    }
+
+    expect(result).toStrictEqual(true);
 });
 
 test('gameboard is able to keep track of misses', () => {

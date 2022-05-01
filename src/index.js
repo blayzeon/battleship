@@ -60,7 +60,9 @@ const placeShip = function (board, coords) {
 
 const placeShips = function (boardObj, boardUi) {
     for (let i = 0; i < boardObj.length; i += 1 ) {
-        placeShip(boardUi, boardObj[i].coords.toString());
+        boardObj[i].damage.forEach((square) => {
+            placeShip(boardUi, square.coords.toString());
+        });
     }
 }
 
