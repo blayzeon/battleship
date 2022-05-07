@@ -1,216 +1,184 @@
-export { ship, gameboard, player };
+export { ship, gameboard, player, getRandomNumber, BOARD_SIZE };
 
-const boardSize = 10;
+const BOARD_SIZE = 10;
+const MAX_SHIP_SIZE = 5;
 
-function getRandomCoords(max) {
-    function random(max) {
-        const min = 1;
-        return Math.floor(Math.random() * (max - min + 1) + min);
-    }
-    return [random(max), random(max)];
+function getRandomNumber(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min) + min);
 }
 
-const setOrientation = function generateCoordsAndDamageObj(start, length, position){
-    const coords = [];
-    const index = position === "h" ? 1 : 0;
-    const newCoords = [];
-
-    let reduced = start[index] || 1;
-    let v = 0;
-    let h = 0;
-
-    while ( reduced + length > 10 ) {
-        reduced -= 1;
-    }
-
-    if (index === 0) {
-        coords.push(reduced);
-        coords.push(start[1] || 1);
-    } else {
-        coords.push(start[0] || 1);
-        coords.push(reduced);
-    }
-
-    for (let i = 0; i < length; i += 1){
-        newCoords.push({coords: [coords[0] + v, coords[1] + h], damaged: false});
-
-        if (position === "h"){
-            h += 1;
-        } else {
-            v += 1;
-        }
-    }
-
-    return newCoords;
-}
-
-const ship = function createBattleship (coords=[1, 1], length=1, position='h', sunk=false) {
+// ships token for the game board
+const ship = function(length) {
     return {
         length,
-        damage: setOrientation(coords, length, position),
-        position,
-        sunk,
-        coords,
-        hit: function (index) {
-            this.damage[index].damaged = true;
-        },
-        isSunk: function () {
-            for (let i = 1; i < this.damage.length; i += 1 ){
-                if ( this.damage[i].damaged === false ) {
-                    return
-                }
+        hits: [],
+        sunk: false,
+        hit: function() {
+            this.hits.push(true);
+            const result = this.isSunk();
+
+            return result;
+        }, 
+        isSunk: function() {
+            if (this.hits.length === this.length) {
+                this.sunk = true;
+                return true;
             }
 
-            this.sunk = true;
-        },
-        rotate: function() {
-            let newPosition = 'h';
-            if (this.position === 'h'){
-                newPosition = 'v';
-            }
-
-            this.damage = setOrientation(this.damage[0].coords, this.length, newPosition);
-            this.position = newPosition;
+            return false;
         }
     }
-}
+};
 
-const gameboard = function createPlayerGameboard () {
+// gameboard to keep track of the player's ships
+const gameboard = function() {
     return {
-        board: {
-            placed: [],
-            misses: []
+        board: (function(){
+            const result = [];
+            for (let i = 1; i <= BOARD_SIZE; i += 1) {
+                for (let j = 1; j <= BOARD_SIZE; j += 1) {
+                    result.push({
+                        coords: `${i},${j}`,
+                        ship: false,
+                        attacked: false
+                    });
+                }
+            }
+            return result;
+        })(),
+        getRandomCoords(min, max) {
+            return `${getRandomNumber(min, max)},${getRandomNumber(min, max)}`;
         },
-        placeship: function (coords, length) {
-            const newShip = ship(coords, length);
-            this.board.placed.push(newShip);
+        returnIndex(coords) {
+            for (let i = 0; i < this.board.length; i += 1) {
+                if (this.board[i].coords === coords) {
+                    return i;
+                }
+            }
+        },
+        placeShip: function(coords, length, direction="h") {
+            const newShip = ship(length);
+            const newPlacement = [];
             
-        },
-        randomize: function (units, maxSize=5) {
-            // sets  max to 5 if the max is too big
-            let max = maxSize;
+            // split the coords up so that we can modify them and add all parts of the ship to the board
+            const coordsArray = coords.split(',');
+            let vCoords = parseInt(coordsArray[0]);
+            let hCoords = parseInt(coordsArray[1]);
 
-            function returnCoords(ship) {
-                const coords = [];
-
-                for (let i = 0; i < ship.damage.length; i += 1) {
-                    coords.push(ship.damage[i].coords);
+            // avoid overflow
+            if (direction === "h") {
+                if (hCoords + length > BOARD_SIZE) {
+                    const tempSize = BOARD_SIZE % 2 === 0 ? BOARD_SIZE : BOARD_SIZE - 1;
+                    hCoords = tempSize / 2;
                 }
-
-                return coords;
-            }
-
-            function checkDupes(array1, array2) {
-                const combined = [];
-                array1.forEach((item)=>{combined.push(item)});
-                array2.forEach((item)=>{combined.push(item)});
-
-                const unique = [...new Set(combined)];
-                    
-                if (unique.length === combined.length) {
-                    return unique;
-                } 
-
-                return false;
-            }
-
-            function createShips() {
-                const newShip = ship(getRandomCoords(boardSize), max);
-                const tempCoords = returnCoords(newShip);
-                if (tempCoords[0] > boardSize) { createShips(); }
-                if (tempCoords[1] > boardSize) { createShips(); }
-
-                const result = checkDupes(allCoords, tempCoords);
-
-                if (!result) {
-                    createShips();
-                }
-
-                return { ship: newShip, coords: tempCoords };
-            }
-
-            const ships = [];
-            const allCoords = [];
-
-            while (ships.length < units) { 
-                const newShip = createShips(allCoords);
-                if (newShip) {
-                    ships.push(newShip.ship);
-                    newShip.coords.forEach((item) => { allCoords.push(item) });
-                    max -= 1;
+            } else {
+                if (vCoords + length > BOARD_SIZE) {
+                    const tempSize = BOARD_SIZE % 2 === 0 ? BOARD_SIZE : BOARD_SIZE - 1;
+                    vCoords = tempSize / 2;
                 }
             }
 
-            const boardShips = this.board.placed;
-            ships.forEach((item) => { boardShips.push(item) });
-        },
-        receiveAttack: function (coords) {
-            // attack ship based on coords provided
-            const ships = this.board.placed;
-            function checkIndexes(){
-                
-                let result = false;
-                ships.forEach(x => x.damage.forEach((y)=> {
-                    if (y.coords.toString() === coords.toString()){
-                        result = [ships.indexOf(x), x.damage.indexOf(y)];
+            // checks to see if the board coords we want to place the ship in are in use
+            for (let i = 0; i < length; i += 1) {
+                // move over one space to place more of the body
+                if (i !== 0) {
+                    if (direction === "h") {
+                        hCoords += 1;
+                    } else {
+                        vCoords += 1;
                     }
-                }))
+                }
 
-                return result;
+                const combinedCoords = `${vCoords},${hCoords}`; 
+                const index = this.returnIndex(combinedCoords);
+
+                // adds them to an array to be added to the board if the spot is free
+                const boardSlot = this.board[index];
+                if (!boardSlot.ship) {
+                    newPlacement.push(boardSlot);
+                } else {
+                    return false;
+                }
+                
             }
 
-            const index = checkIndexes();
+            // safely places ships on the grid
+            for (let j = 0; j < newPlacement.length; j += 1) {
+                newPlacement[j].ship = newShip;
+            }
 
-            // recording hits under misses as well for easier tracking
-            this.board.misses.push(coords);
-
-            if (index){
-                ships[index[0]].hit(index[1]);
-                // check if ship is dead
-                ships[index[0]].isSunk();
-                return ships[index[0]].coords;
-            }             
+            return newPlacement;
         },
-        areAllShipsSunk: function(){
-            const ships = this.board.placed;
-            for (let i = 0; i < ships.length; i += 1){
-                if (ships[i].sunk !== true){
-                    return false;
+        randomizeShipPlacement(amount=MAX_SHIP_SIZE, boardsize=BOARD_SIZE) {
+            const ships = [];            
+            let length = amount;
+
+            // creates ships until we get to the desired amount
+            while (ships.length < amount) {
+                // tries again if the created ship isn't valid
+                let newShip = false;
+
+                while (newShip === false) {
+                    const coords = this.getRandomCoords(1, boardsize);
+                    const orientation = length % 2 === 0 ? "h" : "v";
+                    newShip = this.placeShip(coords, length, orientation);
+                }
+
+                ships.push(newShip);
+                length -= 1;
+            }
+
+            return ships;
+        },
+        receiveAttack: function(coords) {
+            const index = this.returnIndex(coords);
+            this.board[index].attacked = true;
+
+            if (this.board[index].ship) {
+                const ship = this.board[index].ship;
+                ship.hit();
+            }
+
+            return this.board[index];
+        },
+        isGameOver: function() {
+            for (let i = 0; i < this.board.length; i += 1) {
+                if (this.board[i].ship) {
+                    if (!this.board[i].ship.sunk) {
+                        return false;
+                    }
                 }
             }
 
             return true;
-        }
+        },
     }
 }
 
-const player = function createPlayer () {
+// player token that allows the player to attack
+const player = function() {
     return {
         attack: function(opponent, coords) {
-            // can't check if we have an invalid board
-            if (!opponent) { return false }
-            
-            // prevents an error if there are no other attacks attempts
-            const misses = opponent.board.misses[0] ? opponent.board.misses : [[]];
+            // make sure we don't attack the same place twice
+            const index = opponent.returnIndex(coords);
 
-            for (let i = 0; i < misses.length; i += 1){
-                if (misses[i].toString() === coords.toString()){
-                    return false;  
-                }
+            if (!opponent.board[index].attacked) {
+                // returns opponent.board[index]
+                return opponent.receiveAttack(coords);
             }
-
-            return opponent.receiveAttack(coords);
-        }, 
+            
+            return false;            
+        },
         randomAttack: function(opponent) {
-            const coords = getRandomCoords(boardSize);
-            const attempt = this.attack(opponent, coords);
-
-            if (attempt === false){
-                this.randomAttack(opponent);
+            const coords = opponent.getRandomCoords(1, BOARD_SIZE);
+            let attack = false;
+            while (attack === false) {
+                attack = this.attack(opponent, coords);
             }
 
-            return attempt;
-            
+            return attack;
         }
     }
 }

@@ -55,6 +55,20 @@ I will work on having the JavaScript add game pieces to the UI next.
         We’ll leave the HTML implementation up to you for now, but you should display both the player’s boards and render them using information from the Gameboard class.
             You need methods to render the gameboards and to take user input for attacking. For attacks, let the user click on a coordinate in the enemy Gameboard.
         The game loop should step through the game turn by turn using only methods from other objects. If at any point you are tempted to write a new function inside the game loop, step back and figure out which class or module that function should belong to.
+
+So this ended up being very challenging.  Everything I need is available on my objects but not always in the most optimal places because I just did not have the foresight to plan it the way that would be most convenient now.  I could have redone my objects but then I may have needed to redo my tests, so instead I just worked with what I had already made. 
+
+Although the JavaScript tests are making my life a whole lot easier, I wish I knew how to do integration tests to test how it interacts with my HTML.  Currently I am using webpack and just manually testing it in my browser, but the console errors aren't incredibly clear when using webpack.
+
+At this point I still need to implement ship rotation and a visual effect when the ships are destroyed. I also need to have it check for when the ships are sunk.
+
+---
+
+5/7
+The batleship.js scripts that I had wrote previously were not working out.  It was very apparent that I didn't know what I was doing when I wrote them.  I have rewrote everything today and am progressing much faster now.  
+
+I was also having trouble with the table UI so I rewrote that as well. 
+
         Create conditions so that the game ends once one players ships have all been sunk. This function is appropriate for the Game module.
     
     Finish it up

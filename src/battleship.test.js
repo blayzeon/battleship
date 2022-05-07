@@ -1,132 +1,106 @@
-import { ship, gameboard, player } from './battleship.js';
+import { ship, gameboard, player, getRandomNumber } from './battleship.js';
 const { test, expect } = require('@jest/globals');
 
-test('properly applies a length to a new ship', () => {
-    const newShip = ship([1, 1], 2);
+test('gameboard.board contains information about each square', () => {
+    const newBoard = gameboard();
 
-    expect(newShip.length).toBe(2);
+    expect(newBoard.board[0]).toEqual(expect.objectContaining({attacked: false, coords: "1,1", ship: false}));
 });
 
-test('new ships can be rotated', () => {
-    const newShip = ship([1, 1], 3);
-    newShip.rotate()
+test('gameboard.board is the correct length', () => {
+    const newBoard = gameboard();
 
-    expect(newShip.damage[2].coords).toStrictEqual([3, 1]);
+    expect(newBoard.board.length).toEqual(100);
 });
 
-test('new ships aren\'t sunk', () => {
-    const newShip = ship();
+test('gameboard.placeShip can place ships', () => {
+    const newBoard = gameboard();
+    const newShip = newBoard.placeShip("1,1", 1, "h");
 
-    expect(newShip.sunk).toBe(false);
+
+    expect(newBoard.board[0]).toEqual(expect.objectContaining(newShip[0]));
 });
 
-test('completely damaged ships are sunk', () => {
-    const newShip = ship();
-    newShip.hit(0)
-    newShip.isSunk()
+test('gameboard.placeShip can handle ship length', () => {
+    const newBoard = gameboard();
+    const newShip = newBoard.placeShip("1,1", 5, "h");
 
-    expect(newShip.sunk).toStrictEqual(true);
+
+    expect(newBoard.board[4]).toEqual(expect.objectContaining(newShip[4]));
 });
 
-test('gameboard is able to add new ships', () => {
-    const board = gameboard();
-    board.placeship([1, 1], 1);
+test('gameboard.placeShip can handle vertical ships', () => {
+    const newBoard = gameboard();
+    const newShip = newBoard.placeShip("1,1", 5, "v");
 
-    expect(board.board.placed).not.toStrictEqual([]);
+
+    expect(newBoard.board[10]).toEqual(expect.objectContaining(newShip[1]));
 });
 
-test('gameboard is able randomize ship placement', () => {
-    const board = gameboard();
-    board.randomize(5, 5);
+test('gameboard.placeShip does not allow multiple ships to be placed in the same spot', () => {
+    const newBoard = gameboard();
+    newBoard.placeShip("1,1", 3, "h");
+    const ship2 = newBoard.placeShip("1,3", 5, "h");
 
-    expect(board.board.placed.length).toStrictEqual(5);
+
+    expect(ship2).toEqual(false);
 });
 
-test('gameboard does not create items that extend past the border', () => {
-    let result = undefined;
-    for (let i = 0; i < 10; i += 1) {
-        const board = gameboard();
-        board.randomize(1, 10);
-        const item = board.board.placed[0];
-        const coords = item.damage[item.damage.length-1].coords[1];
-        if ( coords > 10) {
-            result = coords;
-        }
-    }
+test('gameboard.receiveAttack will remember where the board was attacked', () => {
+    const newBoard = gameboard()
+    const result = newBoard.receiveAttack("5,5");
 
-    if (result === undefined) {
-        result = true;
-    }
 
-    expect(result).toStrictEqual(true);
+    expect(result.attacked).toEqual(true);
 });
 
-test('gameboard is able to keep track of misses', () => {
-    const board = gameboard();
-    board.placeship([1, 1], 1);
-    board.receiveAttack([5, 5]);
+test('gameboard.receiveAttack can sink ships', () => {
+    const newBoard = gameboard();
+    newBoard.placeShip("1,1", 1, "h");
+    const result = newBoard.receiveAttack("1,1");
 
-    expect(board.board.misses[0]).toStrictEqual([5, 5]);
+
+    expect(result.ship.sunk).toEqual(true);
 });
 
-test('gameboard is able to damage ships', () => {
-    const board = gameboard();
-    board.placeship([1, 1], 1);
-    board.receiveAttack([1, 1]);
+test('gameboard.isGameOver can report if the game is over', () => {
+    const newBoard = gameboard();
+    const result = newBoard.isGameOver();
 
-    expect(board.board.placed[0].damage[0].damaged).toStrictEqual(true);
+    expect(result).toEqual(true);
 });
 
-test('gameboard is able to precisely damage ships', () => {
-    const board = gameboard();
-    board.placeship([1, 1], 2);
-    board.receiveAttack([1, 2]);
+test('gameboard.isGameOver does not report false positives', () => {
+    const newBoard = gameboard();
+    newBoard.placeShip("1,1", 5, "h");
+    newBoard.receiveAttack("1,1");
+    const result = newBoard.isGameOver();
 
-    expect(board.board.placed[0].damage[1].damaged).toStrictEqual(true);
+
+    expect(result).toEqual(false);
 });
 
-test('gameboard is able to sink completely damaged ships', () => {
-    const board = gameboard();
-    board.placeship([1, 1], 2);
-    board.receiveAttack([1, 1]);
-    board.receiveAttack([1, 2]);
+test('gameboard.randomizeShipPlacement will add the correct number of ships', () => {
+    const newBoard = gameboard();
+    const result = newBoard.randomizeShipPlacement(5);
 
-    expect(board.board.placed[0].sunk).toStrictEqual(true);
+    expect(result.length).toEqual(5);
 });
 
-test('gameboard is able to report if all ships are sunk', () => {
-    const board = gameboard();
-    board.placeship([1, 1], 2);
-    board.board.placed[0].sunk = true;
-    const status = board.areAllShipsSunk();
+test('player.attack can damage the opponent\'s board', () => {
+    const newBoard = gameboard();
+    const newPlayer = player();
 
-    expect(status).toStrictEqual(true);
+    const result = newPlayer.attack(newBoard, "1,1");
+
+    expect(result.attacked).toEqual(true);
 });
 
-test('player is able to attack', () => {
-    const player1 = player();
-    const board = gameboard();
-    board.placeship([1, 1], 1);
-    player1.attack(board, [1, 1]);
+test('player.randomAttack can damage the opponent\'s board', () => {
+    const newBoard = gameboard();
+    const newPlayer = player();
 
-    expect(board.board.placed[0].damage[0].damaged).toStrictEqual(true);
-});
+    const result = newPlayer.randomAttack(newBoard);
 
-test('player is not able to attack the same place twice', () => {
-    const player1 = player();
-    const board = gameboard();
-    board.placeship([1, 1], 1);
-    player1.attack(board, [1, 1]);
-    const secondAttack = player1.attack(board, [1, 1]);
-
-    expect(secondAttack).toStrictEqual(false);
-});
-
-test('computer is able to attack randomly', () => {
-    const computer = player();
-    const board = gameboard();
-    board.placeship([1, 1], 1);
-    computer.randomAttack(board);
-
-    expect(board.board.misses).not.toStrictEqual([]);
+    expect(result.attacked).toEqual(true);
 });

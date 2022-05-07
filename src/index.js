@@ -1,7 +1,9 @@
-import { gameboard, player } from './battleship.js';
+import { gameboard, player, BOARD_SIZE } from './battleship.js';
+import './style.css';
 
+// creates the user board so players can attack
 const buildGrid = function(tiles) {
-    const table = document.createElement("table");
+    const table = document.createElement("div");
     table.classList.add('game-table');
     table.classList.add('full-screen');
     
@@ -9,113 +11,140 @@ const buildGrid = function(tiles) {
     const boardSize = tiles < 27 ? tiles : 26
 
     // top row of columns for the game board
-    const column = document.createElement('tr');
+    const topNums = document.createElement('div');
+    topNums.classList.add('game-numbers');
     for (let i = 0; i <= boardSize; i += 1 ) {
-        const header = document.createElement('th');
-        if (i !== 0) { header.innerText = i; }
-        column.appendChild(header);
+        if (i === 0) { continue }
+        const item = document.createElement('div');
+        item.innerText = i;
+        topNums.appendChild(item);
     }
 
-    table.appendChild(column);
+    table.appendChild(topNums);
 
     // side rows for the gameboard
     const ascii = 65; // use String.fromCharCode(code);
+    const centerContent = document.createElement('div');
+    centerContent.classList.add('game-rows');
+    const squares = document.createElement('div');
+    squares.classList.add('game-squares');
+    const sideLetters = document.createElement('div');
+    sideLetters.classList.add('game-letters');
     for (let j = 0; j < boardSize; j += 1 ) {
-        const row = document.createElement('tr');
+        const letter = document.createElement('div');
 
-        const header = document.createElement('th');
-        header.innerText = (String.fromCharCode(j+ascii));
-        row.appendChild(header);
+        letter.innerText = (String.fromCharCode(j+ascii));
+        sideLetters.appendChild(letter);
 
         for (let k = 0; k < boardSize; k += 1 ) {
-            const data = document.createElement('td');
-            data.setAttribute('data', `${j+1},${k+1}`);
-            data.classList.add('grid')
-            row.appendChild(data);
+            const square = document.createElement('div');
+            square.setAttribute('data', `${j+1},${k+1}`);
+            square.classList.add('grid');
+            squares.appendChild(square);
         }
-
-        table.appendChild(row);
     }
+    
+    centerContent.appendChild(sideLetters);
+    centerContent.appendChild(squares);
+    table.appendChild(centerContent);
 
     return table;
 }
 
-const returnSquare = function (board, coords) {
-    const square = board.querySelector(`[data="${coords}"]`);
-    if (square) { return square }
-
-    return false;
+// functions for manipulating the UI
+function getDomSquare(coords, ui) {
+    return ui.querySelector(`[data='${coords}']`);
 }
 
-const placePeg = function() {
-    const peg = document.createElement('div');
-    peg.classList.add('peg');
-    return peg;
+function getAttackToken() {
+    const token = document.createElement('div');
+    token.classList.add('token');
+
+    return token;
 }
 
-const placeShip = function (board, coords) {
-    const unit = returnSquare(board, coords);
-    unit.classList.add('ship');
-};
+function placeShips(board, ui, showShips=false) {
+    const ships = board.randomizeShipPlacement(5);
+    ships.forEach((ship) => {
+        if (showShips) {
+            for (let i = 0; i < ship.length; i += 1) {
+                const square = getDomSquare(ship[i].coords, ui);
+                square.classList.add('ship');
+            }
+        }
+    });
 
-const placeShips = function (boardObj, boardUi) {
-    for (let i = 0; i < boardObj.length; i += 1 ) {
-        boardObj[i].damage.forEach((square) => {
-            placeShip(boardUi, square.coords.toString());
-        });
-    }
+    return ships;
 }
 
-const boardSize = 10;
+function styleEntireShip(shipSet, coords, style, ui) {
+    shipSet.forEach((ship)=>{ // array of arrays that contain ships
+        for (let i = 0; i < ship.length; i += 1){  // array of ships associated with a single ship
+            if (ship[i].coords === coords) {
+                ship.forEach((colorMe)=>{
+                    const elm = getDomSquare(colorMe.coords, ui)
+                    elm.classList.add(style);
+                })
+            }
+        }
+    });
+}
 
-const computerUi = document.querySelector('#top-center');
-const playerUi = document.querySelector('#bottom-center');
+// gameboard and players
+const cpuUi = document.querySelector('#top-center');
+const userUi = document.querySelector('#bottom-center');
 
-computerUi.appendChild(buildGrid(boardSize));
-playerUi.appendChild(buildGrid(boardSize));
+cpuUi.appendChild(buildGrid(BOARD_SIZE));
+userUi.appendChild(buildGrid(BOARD_SIZE));
 
 const userPlayer = player();
-const playerBoard = gameboard();
-playerBoard.randomize(5);
+const userBoard = gameboard();
+const userShips = placeShips(userBoard, userUi, true);
 
 const cpuPlayer = player();
 const cpuBoard = gameboard();
-cpuBoard.randomize(5);
+const cpuShips = placeShips(cpuBoard, cpuUi);
 
-// create the game state
-placeShips(playerBoard.board.placed, playerUi);
+// control the gameplay
+function takeTurn(square, attack, targetBoard, targetShips, targetUi) {
+    square.appendChild(getAttackToken());
+
+    if (attack.ship) {
+        if (attack.ship.sunk) {
+            // let the user know the ship is dead
+            styleEntireShip(targetShips, attack.coords, 'damaged', targetUi);
+
+            // check if the game is over
+            const result = targetBoard.isGameOver();
+            if (result) {
+                console.log('congratulations, you won!!!');
+            }
+        } else {
+            // indicate that the place attacked is an enemy ship
+            square.classList.add('ship');
+        }
+    }   
+}
 
 document.addEventListener('click', (e)=>{
-    function renderDamage(ui, obj, result) {
-        const missed = obj.misses[obj.misses.length-1];
-        
-        const coords = missed.toString();
-        const square = returnSquare(ui, coords);
-        
-        const peg = placePeg();
-        square.appendChild(peg);
+    const board = e.target.closest('.game-table');
+    const square = e.target.closest('.grid');
 
-        if (result) {
-            peg.classList.add('damaged');
+    if (!square) {
+        return // didn't click a square
+    }
+
+    const coords = square.getAttribute('data');
+
+    if (cpuUi.querySelector('.game-table') === board) {
+        // the user clicked the enemy's board
+        const attack = userPlayer.attack(cpuBoard, coords);
+        if (attack) {
+             takeTurn(square, attack, cpuBoard, cpuShips, cpuUi);
+             
+             const cpuAttack = cpuPlayer.randomAttack(userBoard);
+             const cpuTarget = getDomSquare(cpuAttack.coords, userUi);
+             takeTurn(cpuTarget, cpuAttack, userBoard, userShips, userUi);
         }
     }
-
-    // checks which board
-    const board = e.target.closest('table');
-
-    // checks which grid square
-    const td = e.target.closest('td');
-    
-    if (!td) { return } // end if user didn't click a square
-    if (td.innerHTML != '') { return } // end if user clicked a title that has already been clicked
-
-    if (computerUi.querySelector('table') === board) {
-        const result1 = userPlayer.attack(cpuBoard, td.getAttribute('data'));
-        renderDamage(computerUi, cpuBoard.board, result1);
-
-
-        const result2 = cpuPlayer.randomAttack(playerBoard);
-        renderDamage(playerUi, playerBoard.board, result2);
-    }
-
 });
