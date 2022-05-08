@@ -70,7 +70,11 @@ The batleship.js scripts that I had wrote previously were not working out.  It w
 I was also having trouble with the table UI so I rewrote that as well. 
 
         Create conditions so that the game ends once one players ships have all been sunk. This function is appropriate for the Game module.
-    
+
+I ran into a lot of issues with Virtual Box during this.  There were some loop issues and it basically destroyed my Xubuntu.  Literally would not boot any more half the time, and the other half the time, it was constantly freezing, black screening, or not detecting my mouse.  I managed to commit the project but I realized VM was kind of unusable.  Lately it had been eating up all my RAM, so I got more, but it seems to just not free up RAM whenever I restart it, meaning every time it lags/freezes and I need to reboot, it eats up another 4GB of RAM for seeingly no reason.
+
+I installed WSL and it is working a lot better.  
+
     Finish it up
         There are several options available for letting users place their ships. You can let them type coordinates for each ship, or investigate implementing drag and drop.
         You can polish the intelligence of the computer player by having it try adjacent slots after getting a ‘hit’.

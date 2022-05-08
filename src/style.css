@@ -16,34 +16,24 @@ html, body {
 /* Main container div holding the split displays */
 #game-container {
     display: flex;
-    flex-direction: column;
     gap: 0.2rem;
+    flex-direction: row-reverse;
+    justify-content: center;
+    align-items: center;
 }
 
-#game-container > * {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    gap: 0rem;
-    border: 1px solid hsl(0, 0%, 50%);
-}
-
-/* divs inside the game-container, including sides */
 #game-container > * > * {
     min-width: 1rem;
-    width: 10%;
-    background-color: hsla(0, 0%, 100%, 0.20);
-    border: 0.1rem solid hsl(0, 0%, 80%);
 }
 
 #top-center, #bottom-center {
-    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0rem;
     color: white;
-}
-
-#top-center, #bottom-center {
-    /* prevents table overflow */
-    min-width: 20rem;
+    height:fit-content;
+    width: 50%;
+    padding: 1rem;
 }
 
 #top-center {
@@ -54,11 +44,18 @@ html, body {
     background-color: hsla(240, 56%, 68%, 0.7);
 }
 
-/* Generated Battleship Table */
+#top-center > div, #bottom-center > div{
+    display: flex;
+    justify-content: space-between;
+}
+
 .game-table {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    flex-grow: 1;
+    border: 0.1rem solid hsl(0, 0%, 80%);
+    background-color: hsla(0, 0%, 100%, 0.20);
 }
 
 .game-numbers {
@@ -75,7 +72,14 @@ html, body {
 .game-letters {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    text-align: center;
+}
+
+.game-letters > * {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 9.9%;
 }
 
 .game-rows {
@@ -92,11 +96,11 @@ html, body {
 
 .grid {
     outline: 1px solid white;
-    width: 9.99%;
-    height: 9.99%;
     display: flex;
     justify-content: center;
     align-items: center;
+    aspect-ratio: 1/1;
+    width: 9.9%;
 }
 
 .grid:hover {
@@ -108,9 +112,9 @@ html, body {
 
 .token {
     background: black;
-    width: 1rem;
-    height: 1rem;
-    border-radius: 0.5rem;
+    width: 40%;
+    aspect-ratio: 1/1;
+    border-radius: 1rem;
 }
 
 .ship {
@@ -119,9 +123,15 @@ html, body {
 }
 
 .damaged {
-    background-color: red;
+    background-color: red !important;
 }
 
 .destroyed {
     background-color: hsl(0, 0%, 0%, 0.7);
+}
+
+@media only screen and (max-width: 900px) {
+    #game-container {
+        flex-direction: column-reverse;
+    }
 }

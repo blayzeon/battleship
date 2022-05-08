@@ -1,4 +1,4 @@
-export { ship, gameboard, player, getRandomNumber, BOARD_SIZE };
+export { ship, gameboard, player, getRandomNumber, BOARD_SIZE, MAX_SHIP_SIZE };
 
 const BOARD_SIZE = 10;
 const MAX_SHIP_SIZE = 5;
@@ -48,6 +48,12 @@ const gameboard = function() {
             }
             return result;
         })(),
+        clearBoard(){
+            for (let i = 0; i < this.board.length; i += 1) {
+                this.board[i].ship = false;
+                this.board[i].attacked = false;
+            }
+        },
         getRandomCoords(min, max) {
             return `${getRandomNumber(min, max)},${getRandomNumber(min, max)}`;
         },
@@ -151,7 +157,7 @@ const gameboard = function() {
                     }
                 }
             }
-
+            
             return true;
         },
     }
@@ -172,10 +178,9 @@ const player = function() {
             return false;            
         },
         randomAttack: function(opponent) {
-            const coords = opponent.getRandomCoords(1, BOARD_SIZE);
             let attack = false;
             while (attack === false) {
-                attack = this.attack(opponent, coords);
+                attack = this.attack(opponent, opponent.getRandomCoords(1, BOARD_SIZE+1));
             }
 
             return attack;

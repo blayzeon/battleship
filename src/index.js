@@ -1,5 +1,22 @@
-import { gameboard, player, BOARD_SIZE } from './battleship.js';
+import { gameboard, player, BOARD_SIZE, MAX_SHIP_SIZE } from './battleship.js';
 import './style.css';
+
+// tracking game state
+let isGameOver = false
+let userScore = MAX_SHIP_SIZE;
+let cpuScore = MAX_SHIP_SIZE;
+
+function getScoreMessage(newScore, maxScore) {
+    return `Ships: ${newScore} out of ${maxScore}`;
+}
+
+function updateScoreMessages() {
+    const uScoreElm = document.querySelector('#top-score');
+    const cScoreElm = document.querySelector('#bottom-score');
+
+    uScoreElm.innerText = getScoreMessage(userScore, MAX_SHIP_SIZE);
+    cScoreElm.innerText = getScoreMessage(cpuScore, MAX_SHIP_SIZE);
+}
 
 // creates the user board so players can attack
 const buildGrid = function(tiles) {
@@ -51,100 +68,158 @@ const buildGrid = function(tiles) {
     return table;
 }
 
-// functions for manipulating the UI
-function getDomSquare(coords, ui) {
-    return ui.querySelector(`[data='${coords}']`);
-}
+updateScoreMessages();
 
-function getAttackToken() {
-    const token = document.createElement('div');
-    token.classList.add('token');
+function startGame() {
+    // functions for manipulating the UI
+    function getDomSquare(coords, ui) {
+        return ui.querySelector(`[data='${coords}']`);
+    }
 
-    return token;
-}
+    function getAttackToken() {
+        const token = document.createElement('div');
+        token.classList.add('token');
 
-function placeShips(board, ui, showShips=false) {
-    const ships = board.randomizeShipPlacement(5);
-    ships.forEach((ship) => {
-        if (showShips) {
-            for (let i = 0; i < ship.length; i += 1) {
-                const square = getDomSquare(ship[i].coords, ui);
-                square.classList.add('ship');
+        return token;
+    }
+
+    function placeShips(board, ui, showShips=false) {
+        const ships = board.randomizeShipPlacement(5);
+        ships.forEach((ship) => {
+            if (showShips) {
+                for (let i = 0; i < ship.length; i += 1) {
+                    const square = getDomSquare(ship[i].coords, ui);
+                    square.classList.add('ship');
+                }
             }
-        }
-    });
+        });
 
-    return ships;
-}
+        return ships;
+    }
 
-function styleEntireShip(shipSet, coords, style, ui) {
-    shipSet.forEach((ship)=>{ // array of arrays that contain ships
-        for (let i = 0; i < ship.length; i += 1){  // array of ships associated with a single ship
-            if (ship[i].coords === coords) {
-                ship.forEach((colorMe)=>{
-                    const elm = getDomSquare(colorMe.coords, ui)
-                    elm.classList.add(style);
-                })
+    function styleEntireShip(shipSet, coords, style, ui) {
+        shipSet.forEach((ship)=>{ // array of arrays that contain ships
+            for (let i = 0; i < ship.length; i += 1){  // array of ships associated with a single ship
+                if (ship[i].coords === coords) {
+                    ship.forEach((colorMe)=>{
+                        const elm = getDomSquare(colorMe.coords, ui)
+                        elm.classList.add(style);
+                    })
+                }
             }
-        }
-    });
-}
+        });
+    }
 
-// gameboard and players
-const cpuUi = document.querySelector('#top-center');
-const userUi = document.querySelector('#bottom-center');
+    // gameboard and players
+    const cpuUi = document.querySelector('#top-center');
+    const userUi = document.querySelector('#bottom-center');
 
-cpuUi.appendChild(buildGrid(BOARD_SIZE));
-userUi.appendChild(buildGrid(BOARD_SIZE));
+    cpuUi.appendChild(buildGrid(BOARD_SIZE));
+    userUi.appendChild(buildGrid(BOARD_SIZE));
 
-const userPlayer = player();
-const userBoard = gameboard();
-const userShips = placeShips(userBoard, userUi, true);
+    const userPlayer = player();
+    const userBoard = gameboard();
+    let userShips = placeShips(userBoard, userUi, true);
 
-const cpuPlayer = player();
-const cpuBoard = gameboard();
-const cpuShips = placeShips(cpuBoard, cpuUi);
+    const cpuPlayer = player();
+    const cpuBoard = gameboard();
+    let cpuShips = placeShips(cpuBoard, cpuUi);
 
-// control the gameplay
-function takeTurn(square, attack, targetBoard, targetShips, targetUi) {
-    square.appendChild(getAttackToken());
+    // control the gameplay
+    function takeTurn(square, attack, targetBoard, targetShips, targetUi) {
+        square.appendChild(getAttackToken());
 
-    if (attack.ship) {
-        if (attack.ship.sunk) {
-            // let the user know the ship is dead
-            styleEntireShip(targetShips, attack.coords, 'damaged', targetUi);
-
-            // check if the game is over
-            const result = targetBoard.isGameOver();
-            if (result) {
-                console.log('congratulations, you won!!!');
-            }
-        } else {
-            // indicate that the place attacked is an enemy ship
+        if (attack.ship) {
             square.classList.add('ship');
+            if (attack.ship.sunk) {
+                // let the user know the ship is dead
+                styleEntireShip(targetShips, attack.coords, 'damaged', targetUi);
+
+                if (targetUi === cpuUi) {
+                    userScore -= 1;
+                } else {
+                    cpuScore -= 1;
+                }
+
+                updateScoreMessages();
+
+                // check if the game is over
+                const result = targetBoard.isGameOver();
+                if (result) {
+                    isGameOver = true;
+                }
+                
+            }
+
+            return true;  // so we know if the user should take another turn
+        } 
+
+        return false;
+    }
+
+    document.addEventListener('click', (e)=>{
+        if (isGameOver) {
+            const a = confirm('You won!  Would you like to play again?');
+            if (a) {
+                // reset game state
+                userBoard.clearBoard();
+                cpuBoard.clearBoard();
+
+                const allShips = document.querySelectorAll('.ship').forEach((ship) => {
+                    ship.classList.remove('ship');
+                });
+
+                const allSunk = document.querySelectorAll('.damaged').forEach((ship) => {
+                    ship.classList.remove('damaged');
+                });
+
+
+                const allTokens = document.querySelectorAll('.token').forEach((token) => {
+                    token.remove();
+                });
+
+                userScore = MAX_SHIP_SIZE;
+                cpuScore = MAX_SHIP_SIZE;
+
+                userShips = placeShips(userBoard, userUi, true);
+                cpuShips = placeShips(cpuBoard, cpuUi);
+
+                updateScoreMessages();
+
+                isGameOver = false;
+
+
+            }
+
+            return;
         }
-    }   
+    
+        const board = e.target.closest('.game-table');
+        const square = e.target.closest('.grid');
+    
+        if (!square) {
+            return // didn't click a square
+        }
+    
+        const coords = square.getAttribute('data');
+    
+        if (cpuUi.querySelector('.game-table') === board) {
+            // the user clicked the enemy's board
+            const attack = userPlayer.attack(cpuBoard, coords);
+            if (attack) {
+                 const userTurn = takeTurn(square, attack, cpuBoard, cpuShips, cpuUi);
+    
+                 if (!userTurn){
+                    let cpuTurn = true;
+                    while (cpuTurn) {
+                        const cpuAttack = cpuPlayer.randomAttack(userBoard);
+                        const cpuTarget = getDomSquare(cpuAttack.coords, userUi);
+                        cpuTurn = takeTurn(cpuTarget, cpuAttack, userBoard, userShips, userUi);
+                    }
+                 }
+            }
+        }
+    });
 }
 
-document.addEventListener('click', (e)=>{
-    const board = e.target.closest('.game-table');
-    const square = e.target.closest('.grid');
-
-    if (!square) {
-        return // didn't click a square
-    }
-
-    const coords = square.getAttribute('data');
-
-    if (cpuUi.querySelector('.game-table') === board) {
-        // the user clicked the enemy's board
-        const attack = userPlayer.attack(cpuBoard, coords);
-        if (attack) {
-             takeTurn(square, attack, cpuBoard, cpuShips, cpuUi);
-             
-             const cpuAttack = cpuPlayer.randomAttack(userBoard);
-             const cpuTarget = getDomSquare(cpuAttack.coords, userUi);
-             takeTurn(cpuTarget, cpuAttack, userBoard, userShips, userUi);
-        }
-    }
-});
+startGame();

@@ -104,3 +104,14 @@ test('player.randomAttack can damage the opponent\'s board', () => {
 
     expect(result.attacked).toEqual(true);
 });
+
+test('player.clearBoard will clear the whole board', () => {
+    const newBoard = gameboard();
+    const oldBoard = newBoard.board.toString()
+    newBoard.randomizeShipPlacement();
+    newBoard.clearBoard
+    const clearedBoard = newBoard.board.toString();
+
+    expect(oldBoard).toEqual(clearedBoard);
+});
+
