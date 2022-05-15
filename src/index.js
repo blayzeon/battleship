@@ -1,10 +1,43 @@
 import { gameboard, player, BOARD_SIZE, MAX_SHIP_SIZE } from './battleship.js';
 import './style.css';
 
+
+
+function startGame() {
 // tracking game state
 let isGameOver = false
 let userScore = MAX_SHIP_SIZE;
 let cpuScore = MAX_SHIP_SIZE;
+
+function gameOver() {
+    function clearBoard() {
+        while (document.body.firstChild) {
+            document.body.removeChild(document.body.lastChild);
+        }
+
+        document.body.innerHTML = `
+            <div id="game-container" class="full-screen">
+            <div id="top-center">
+            <div>
+                <div>CPU's board</div>
+                <div id="top-score"></div>
+            </div></div>
+            <div id="bottom-center">
+                <div>
+                    <div>User's board</div>
+                    <div id="bottom-score"></div>
+                </div>
+            </div>
+        </div>
+    `
+    }
+
+    const a = confirm('Game over! Would you like to play again?');
+    if (a) {
+        clearBoard();
+        startGame();
+    }       
+}
 
 function getScoreMessage(newScore, maxScore) {
     return `Ships: ${newScore} out of ${maxScore}`;
@@ -70,7 +103,7 @@ const buildGrid = function(tiles) {
 
 updateScoreMessages();
 
-function startGame() {
+
     // functions for manipulating the UI
     function getDomSquare(coords, ui) {
         return ui.querySelector(`[data='${coords}']`);
@@ -147,6 +180,7 @@ function startGame() {
                 const result = targetBoard.isGameOver();
                 if (result) {
                     isGameOver = true;
+                    gameOver();
                 }
                 
             }
@@ -157,44 +191,10 @@ function startGame() {
         return false;
     }
 
-    document.addEventListener('click', (e)=>{
-        if (isGameOver) {
-            
-            const a = confirm('Game over! Would you like to play again?');
-            if (a) {
-                // reset game state
-                userBoard.clearBoard();
-                cpuBoard.clearBoard();
-
-                const allShips = document.querySelectorAll('.ship').forEach((ship) => {
-                    ship.classList.remove('ship');
-                });
-
-                const allSunk = document.querySelectorAll('.damaged').forEach((ship) => {
-                    ship.classList.remove('damaged');
-                });
-
-
-                const allTokens = document.querySelectorAll('.token').forEach((token) => {
-                    token.remove();
-                });
-
-                userScore = MAX_SHIP_SIZE;
-                cpuScore = MAX_SHIP_SIZE;
-
-                userShips = placeShips(userBoard, userUi, true);
-                cpuShips = placeShips(cpuBoard, cpuUi);
-
-                updateScoreMessages();
-
-                isGameOver = false;
-
-
-            }
-
-            return;
+    document.getElementById('game-container').addEventListener('click', (e)=>{   
+        if (isGameOver === true) {
+            gameOver();
         }
-    
         const board = e.target.closest('.game-table');
         const square = e.target.closest('.grid');
     
