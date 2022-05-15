@@ -115,3 +115,40 @@ test('player.clearBoard will clear the whole board', () => {
     expect(oldBoard).toEqual(clearedBoard);
 });
 
+test('gameboard.getDamagedShips will return a list of damaged ships', () => {
+    const newBoard = gameboard();
+    newBoard.placeShip('1,1', 5);
+    newBoard.placeShip('3,3', 3);
+    newBoard.receiveAttack('1,1');
+    newBoard.receiveAttack('3,3');
+    const result = newBoard.getDamagedShips();
+
+    expect(result[0]).toEqual('1,1');
+});
+
+test('gameboard.getDamagedShips will not return sunken ships', () => {
+    const newBoard = gameboard();
+    newBoard.placeShip('1,1', 1);
+    newBoard.placeShip('3,3', 3);
+    newBoard.receiveAttack('1,1');
+    newBoard.receiveAttack('3,3');
+    const result = newBoard.getDamagedShips();
+
+    expect(result[0]).toEqual('3,3');
+});
+
+test('player.randomAttack will target damaged ships', () => {
+    const newBoard = gameboard();
+    newBoard.placeShip('1,1', 2);
+    newBoard.receiveAttack('1,1');
+
+    const newPlayer = player();
+
+    // Placing a ship at 1,1 means it should be destroyed within 2 attacks
+    newPlayer.randomAttack(newBoard);
+    newPlayer.randomAttack(newBoard);
+
+    const result = newBoard.isGameOver();
+
+    expect(result).toEqual(true);
+});

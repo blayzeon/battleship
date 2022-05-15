@@ -48,16 +48,35 @@ const gameboard = function() {
             }
             return result;
         })(),
-        clearBoard(){
+        getDamagedShips: function(){
+            // this is used to help player.randomAttack() know where to strike
+            const board = this.board;
+            const result = [];
+
+            board.forEach((item) => {
+                if (item.ship) {
+                    if (item.attacked) {
+                        if (!item.ship.sunk) {
+                            result.push(item.coords);
+                        }
+                    }
+                }
+            });
+
+            return result;
+        },
+        clearBoard: function(){
+            // clears the board for a new game
             for (let i = 0; i < this.board.length; i += 1) {
                 this.board[i].ship = false;
                 this.board[i].attacked = false;
             }
         },
-        getRandomCoords(min, max) {
+        getRandomCoords: function(min, max) {
+            // for player.RandomAttack() and board.randomizeShipPlacement()
             return `${getRandomNumber(min, max)},${getRandomNumber(min, max)}`;
         },
-        returnIndex(coords) {
+        returnIndex: function(coords) {
             for (let i = 0; i < this.board.length; i += 1) {
                 if (this.board[i].coords === coords) {
                     return i;
@@ -179,11 +198,103 @@ const player = function() {
         },
         randomAttack: function(opponent) {
             let attack = false;
-            while (attack === false) {
-                attack = this.attack(opponent, opponent.getRandomCoords(1, BOARD_SIZE+1));
-            }
 
+            while (attack === false) {
+                // returns a list of coords for damaged ships
+                const previousHits = opponent.getDamagedShips();
+                let coords = false;
+                
+                if (previousHits[0]) {
+                    function checkCourse(index) {
+                        const options = []
+                        options.push(1);
+                        options.push(-1);
+                        options.push(10);
+                        options.push(-10);
+
+                        // check if the ship we're targeting has been hit before
+                        if (opponent.board[index].ship.hits.length < 1) {
+                            // it hasn't, so we're going to attack somewhat randomly
+                            for (let i = 0; i < options.length; i += 1) {
+                                const newIndex = index + options[i];
+                                if (!opponent.board[newIndex].attacked) {
+                                    // the target spot hasn't been attacked yet
+                                    console.log(opponent.board[newIndex].coords);
+                                    return opponent.board[newIndex].coords;
+                                }
+                            }
+                        } else {
+                            // it has been hit before, so we can cheat
+                            for (let i = 0; i < options.length; i += 1) {
+                                let newIndex = index + options[i];
+                                if (opponent.board[newIndex].ship) {
+                                    // our target is a ship
+                                    if (!opponent.board[newIndex].attacked) {
+                                        // it hasn't been attacked
+                                        return opponent.board[newIndex].coords;
+                                    } else {
+                                        // it has been attacked
+                                        for (let j = 0; j < 100; j += 1) {
+                                            // check if the previous attempt was a miss
+                                            if (!opponent.board[newIndex].ship) {
+                                                continue;
+                                            }
+
+                                            newIndex += options[i];
+                                            // check if it exists
+                                            if (opponent.board[newIndex]) {
+                                                if (!opponent.board[newIndex].attacked) {
+                                                    return opponent.board[newIndex].coords;
+                                                } else {
+                                                    // it doesnt, so we need to change direction
+                                                    continue;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    const previousIndex = opponent.returnIndex(previousHits[0]); 
+                    
+                    // let's try attacking
+                    coords = checkCourse(previousIndex);
+                    attack = this.attack(opponent, coords);
+                    
+                } else {
+                    attack = this.attack(opponent, opponent.getRandomCoords(1, BOARD_SIZE+1));
+                }
+            }
             return attack;
         }
     }
 }
+
+/*
+            randomAttack: function(opponent) {
+            let attack = false;
+            const previousHits = opponent.getDamagedShips();
+
+            let mod = 1;
+            while (attack === false) {
+                // attack based on previous attacks
+                if (previousHits[0]) {
+                    console.log(`the previous target was ${previousHits[0]}`);
+                    const currentIndex = opponent.returnIndex(previousHits[0]);
+                    const targetIndex = currentIndex + mod;
+                    const targetCoords = opponent.board[targetIndex].coords;
+                    console.log(`the current target is ${targetCoords}`)
+                    attack = this.attack(opponent, targetCoords);
+                } else {
+                    // completely random attack
+                    attack = this.attack(opponent, opponent.getRandomCoords(1, BOARD_SIZE+1));
+                    console.log(attack);
+                }
+            }
+
+            return attack;
+        }
+
+*/

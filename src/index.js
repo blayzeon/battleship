@@ -159,7 +159,8 @@ function startGame() {
 
     document.addEventListener('click', (e)=>{
         if (isGameOver) {
-            const a = confirm('You won!  Would you like to play again?');
+            
+            const a = confirm('Game over! Would you like to play again?');
             if (a) {
                 // reset game state
                 userBoard.clearBoard();
