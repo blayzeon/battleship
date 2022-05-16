@@ -95,14 +95,10 @@ const gameboard = function() {
             // avoid overflow
             if (direction === "h") {
                 if (hCoords + length - 1 > BOARD_SIZE) {
-                    console.log(hCoords)
-                    console.log(hCoords + length)
-                    console.log(BOARD_SIZE);
                     return false;
                 }
             } else {
                 if (vCoords + length - 1 > BOARD_SIZE) {
-                    console.log('v was too long')
                     return false;
                 }
             }
@@ -126,7 +122,6 @@ const gameboard = function() {
                 if (!boardSlot.ship) {
                     newPlacement.push(boardSlot);
                 } else {
-                    console.log('board slot was taken')
                     return false;
                 }
                 

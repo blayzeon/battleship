@@ -9,7 +9,7 @@ function startGame() {
     let userScore = MAX_SHIP_SIZE;
     let cpuScore = MAX_SHIP_SIZE;
 
-    function gameOver() {
+    function restartBoard() {
         function clearBoard() {
             while (document.body.firstChild) {
                 document.body.removeChild(document.body.lastChild);
@@ -31,11 +31,13 @@ function startGame() {
             </div>
         `
         }
-
+        clearBoard();
+        startGame();
+    }
+    function gameOver() {
         const a = confirm('Game over! Would you like to play again?');
         if (a) {
-            clearBoard();
-            startGame();
+            restartBoard();
         }       
     }
 
@@ -77,10 +79,13 @@ function startGame() {
         const coordsInput1 = document.createElement('select');
         const coordsInput2 = document.createElement('select');
 
+        const ascii = 64; // use String.fromCharCode(code);
         for (let i = 1; i <= 10; i += 1) {
             const option1 = document.createElement('option');
             const option2 = document.createElement('option');
-            option1.innerText = i;
+            option1.innerText = String.fromCharCode(i + ascii);
+            option1.value = i;
+            option2.value = i;
             option2.innerText = i;
 
             coordsInput1.appendChild(option1);
@@ -230,6 +235,7 @@ function startGame() {
     // control the gameplay
     function takeTurn(square, attack, targetBoard, targetShips, targetUi) {
         square.appendChild(getAttackToken());
+        square.classList.add('fadeIn');
 
         if (attack.ship) {
             square.classList.add('ship');
@@ -261,23 +267,31 @@ function startGame() {
     }
 
     let gameStarted = false;
-
+    let playerTurn = true;
     // let the player attack or move pieces
     document.getElementById('game-container').addEventListener('click', (e)=>{   
+        if (!playerTurn) {
+            // dont let the user attack while it's the AI's turn
+            console.log('its not your turn yet');
+            return;
+        }
+        
         if (isGameOver === true) {
             gameOver();
             return;
         }
+
         const board = e.target.closest('.game-table');
         const square = e.target.closest('.grid');
     
         if (!square) {
-            return // didn't click a square
+            return // didn't click a square so we don't want to do anything else
         }
     
         const coords = square.getAttribute('data');
         if (gameStarted === false) {
             if (userUi.querySelector('.game-table') === board) {
+
                 // get ship
                 const squareCoords = square.getAttribute('data');
                 const boardSlot = userBoard.board.find(index => index.coords === squareCoords);
@@ -286,8 +300,16 @@ function startGame() {
 
                 // user didn't click a ship
                 if (ship === false) {
+                    if (gameStarted === false) {
+                        // offer to randomize the board
+                        const a = confirm('Would you like to randomize the board?');
+                        if (a) {
+                            restartBoard();
+                        }
+                    }
                     return;
                 }
+                
 
                 if (document.querySelector('.popup')) {
                     // we already have a popup, so we don't want another one
@@ -295,30 +317,37 @@ function startGame() {
                 }
                 const popObj = createPopup();
                 document.body.appendChild(popObj.container);
-                popObj.submit.addEventListener('click', () => {
+                popObj.submit.addEventListener('click', () => {                    
                     if (gameStarted === true) {
                         // can't move ships once the game has started
+                        popObj.container.remove();
                         return
                     }
-                    
-                    styleEntireShip(userShips, squareCoords, 'ship', userUi, false);
+
+                    // new ship
                     const hCoords = popObj.coordsH.value;
                     const vCoords = popObj.coordsV.value;
                     const direction = popObj.direction.value === 'Horizontal' ? 'h' : 'v';
                     const length = ship.length;
                     const coords = `${vCoords},${hCoords}`;
                     const newShip = userBoard.placeShip(coords, length, direction);
-                    console.log(userBoard);
-                    userShips.push(newShip);
-                    console.log(newShip);
-                    styleEntireShip(userShips, coords, 'ship', userUi);
 
+                    if (!newShip) {
+                        // prevents ships from being removed if the replacement is invalid
+                        popObj.container.classList.toggle('shake');
+                        return;
+                    }
+
+                    // replace the ship
+                    styleEntireShip(userShips, squareCoords, 'ship', userUi, false);
+                    userShips.push(newShip);
+                    styleEntireShip(userShips, coords, 'ship', userUi);
                     shipIndexes.forEach((shipSection) => {
                         delete shipSection.ship;
                     });
 
                     popObj.container.remove();
-                })
+                });
             }
         }
 
@@ -330,14 +359,22 @@ function startGame() {
             const attack = userPlayer.attack(cpuBoard, coords);
             if (attack) {
                  const userTurn = takeTurn(square, attack, cpuBoard, cpuShips, cpuUi);
-    
+
                  if (!userTurn){
-                    let cpuTurn = true;
-                    while (cpuTurn) {
+                    playerTurn = false;
+                    function takeCpuTurn() {
                         const cpuAttack = cpuPlayer.randomAttack(userBoard);
                         const cpuTarget = getDomSquare(cpuAttack.coords, userUi);
-                        cpuTurn = takeTurn(cpuTarget, cpuAttack, userBoard, userShips, userUi);
+                        const result = takeTurn(cpuTarget, cpuAttack, userBoard, userShips, userUi);
+                        if (result === true) {
+                            setTimeout(() => {
+                                takeCpuTurn();                                
+                            }, 1000);
+                        } else {
+                            playerTurn = true;
+                        }
                     }
+                    takeCpuTurn();
                  }
             }
         }
