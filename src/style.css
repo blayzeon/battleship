@@ -49,6 +49,29 @@ html, body {
     justify-content: space-between;
 }
 
+.popup {
+    position: absolute;
+    z-index: 1;
+    background-color: white;
+    border: 1px solid black;
+    padding: 3%;
+    top:50%;
+    left: 50%;
+    transform: translate(-50% , -50%);
+    border-radius: 0.5rem;
+}
+
+button {
+    cursor: pointer;
+}
+
+.popup > div {
+    margin-bottom: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
 .game-table {
     display: flex;
     flex-direction: column;

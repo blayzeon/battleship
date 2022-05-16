@@ -94,14 +94,16 @@ const gameboard = function() {
 
             // avoid overflow
             if (direction === "h") {
-                if (hCoords + length > BOARD_SIZE) {
-                    const tempSize = BOARD_SIZE % 2 === 0 ? BOARD_SIZE : BOARD_SIZE - 1;
-                    hCoords = tempSize / 2;
+                if (hCoords + length - 1 > BOARD_SIZE) {
+                    console.log(hCoords)
+                    console.log(hCoords + length)
+                    console.log(BOARD_SIZE);
+                    return false;
                 }
             } else {
-                if (vCoords + length > BOARD_SIZE) {
-                    const tempSize = BOARD_SIZE % 2 === 0 ? BOARD_SIZE : BOARD_SIZE - 1;
-                    vCoords = tempSize / 2;
+                if (vCoords + length - 1 > BOARD_SIZE) {
+                    console.log('v was too long')
+                    return false;
                 }
             }
 
@@ -124,6 +126,7 @@ const gameboard = function() {
                 if (!boardSlot.ship) {
                     newPlacement.push(boardSlot);
                 } else {
+                    console.log('board slot was taken')
                     return false;
                 }
                 
@@ -271,30 +274,3 @@ const player = function() {
         }
     }
 }
-
-/*
-            randomAttack: function(opponent) {
-            let attack = false;
-            const previousHits = opponent.getDamagedShips();
-
-            let mod = 1;
-            while (attack === false) {
-                // attack based on previous attacks
-                if (previousHits[0]) {
-                    console.log(`the previous target was ${previousHits[0]}`);
-                    const currentIndex = opponent.returnIndex(previousHits[0]);
-                    const targetIndex = currentIndex + mod;
-                    const targetCoords = opponent.board[targetIndex].coords;
-                    console.log(`the current target is ${targetCoords}`)
-                    attack = this.attack(opponent, targetCoords);
-                } else {
-                    // completely random attack
-                    attack = this.attack(opponent, opponent.getRandomCoords(1, BOARD_SIZE+1));
-                    console.log(attack);
-                }
-            }
-
-            return attack;
-        }
-
-*/

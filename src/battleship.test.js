@@ -46,6 +46,20 @@ test('gameboard.placeShip does not allow multiple ships to be placed in the same
     expect(ship2).toEqual(false);
 });
 
+test('gameboard.placeShip can place at 10,7', () => {
+    const newBoard = gameboard();
+    const newShip = newBoard.placeShip("10,7", 2, "h");
+
+    expect(newBoard.board[96]).toEqual(newShip[0]);
+});
+
+test('gameboard.placeShip can place at 10,10', () => {
+    const newBoard = gameboard();
+    const newShip = newBoard.placeShip("10,9", 2, "h");
+
+    expect(newBoard.board[99]).toEqual(newShip[0]);
+});
+
 test('gameboard.receiveAttack will remember where the board was attacked', () => {
     const newBoard = gameboard()
     const result = newBoard.receiveAttack("5,5");
