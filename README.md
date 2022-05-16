@@ -78,13 +78,11 @@ I installed WSL and it is working a lot better.
 ---
 
 5/15
-
-I decided to try my hand at the AI first.  This was quite challenging as I kept running into bugs.  Eventually, I just realized that the easiest way to make sure the AI doesn't attack in the wrong direction when they should "know" where to go, is to have them cheat by peaking ahead at the opponent's board. It still will attack the wrong place, but only if it is not clear where to go.
-
-Going to try my hand at the drag and drop option now.
-
     Finish it up
         There are several options available for letting users place their ships. You can let them type coordinates for each ship, or investigate implementing drag and drop.
         You can polish the intelligence of the computer player by having it try adjacent slots after getting a ‘hit’.
         Optionally, create a 2 player option that lets users take turns by passing the device back and forth. If you’re going to go this route, make sure the game is playable on a mobile screen and implement a ‘pass device’ screen so that players don’t see each others boards!
 
+I decided to try my hand at the AI first.  This was quite challenging as I kept running into bugs.  Eventually, I just realized that the easiest way to make sure the AI doesn't attack in the wrong direction when they should "know" where to go, is to have them cheat by peaking ahead at the opponent's board. It still will attack the wrong place, but only if it is not clear where to go.
+
+I also added the ability to randomize the board by clicking on an empty square on your own board, or move your pieces by clicking the piece you wish to move and editing it via a popup window.
